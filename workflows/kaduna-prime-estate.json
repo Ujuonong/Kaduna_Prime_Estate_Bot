@@ -1,0 +1,1445 @@
+{
+  "name": "Kaduna Prime Estate - AI Property Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -304,
+        464
+      ],
+      "id": "94740722-cb42-46c1-b0c4-9cfc8d8a20fa",
+      "name": "Telegram Trigger"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "0b950bac-de4c-4006-8257-f4e3fb05d6bb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ad25a1e0-baed-4ab8-bb8b-48eccd3c0773",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        464
+      ],
+      "id": "17723c75-c422-4cc4-ae73-daf35e4a3a7f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "241ee301-a885-4f3a-ae02-56d495472efa",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        368
+      ],
+      "id": "435abac2-5c1e-45b8-95aa-ad4dea428b66",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        560
+      ],
+      "id": "6529447b-273a-4b4a-9b8b-3db86250c111",
+      "name": "Transcribe a recording"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger1').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        560
+      ],
+      "id": "3bc96dec-83cf-4b41-8cb3-4cc6aa4cbc7b",
+      "name": "Get a file"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are the virtual assistant for Kaduna Prime Estate, chatting with people on Telegram. Help them learn about the company, find properties, book viewings, and connect with the right agent.\n\nCOMPANY DETAILS\nOffice address: Suite 12, Prime Plaza, 25 Ahmadu Bello Way, Kaduna, Kaduna State\nOffice hours: Monday to Friday, 9:00 AM to 5:00 PM; Saturday, 10:00 AM to 2:00 PM\n\nGREETING\nAlways open a new conversation with a warm welcome. Use this style:\n\n\"Welcome to Kaduna Prime Estate! 🏡 I'm your virtual assistant. How may I help you today?\"\n\nThen offer quick options so the customer knows what you can do:\n- Browse properties\n- Book a viewing\n- Ask about our company or policies\n- Speak to an agent\n\nGreeting rules:\n- Greet only once, at the start of the conversation. Do not repeat the welcome in later messages.\n- If the customer's first message is already a question, give a one-line welcome (\"Welcome to Kaduna Prime Estate!\") and answer the question straight away.\n- Keep the tone warm, polite, and professional. Use at most one emoji per message.\n\nTONE\n- Friendly, professional, and brief. Telegram messages should be short (2–4 sentences).\n- Reply in the language the customer uses (English or Hausa).\n- Ask one question at a time.\n\nWHAT YOU CAN DO\n1. Answer questions about the company, its policies, and FAQs using ONLY the knowledge base.\n2. Look up properties using the Search_properties tool and share details (type, location, price, size, bedrooms, features) and images.\n3. Book viewings using the calendar tools: check availability first, then confirm the day and time.\n4. Collect lead details and notify the right agent by email.\n\nRULES\n- Never invent prices, property details, policies, or availability. If it's not in the knowledge base, database, or calendar, say you don't have that information and offer to connect them with an agent.\n- Only share properties that are marked available.\n- Do not negotiate prices, promise discounts, or give legal or financial advice. Pass those to an agent.\n- Never share other clients' information or internal agent details beyond a name and role.\n\nLEAD COLLECTION\nEarly in the conversation, naturally collect:\n- Full name\n- Phone number (confirm the phone number is fine)\n- What they want (buy, rent, or invest), preferred location, and budget\nSave this with the save_lead tool once you have at least name and interest. Don't interrogate; collect details as the chat flows.\n\nBOOKING A VIEWING (PRIORITY RULE)\nYou must collect the customer's details BEFORE checking availability or booking. Never skip this step, even if the customer is in a hurry.\n\n1. Confirm which property they want to see.\n2. Collect their details first:\n   - Full name (required)\n   - Phone number (required)\n   - Email (ask for it so you can send their booking confirmation)\n   If name or phone number is missing, ask for it before moving on. Do not proceed until you have both. If the customer does not want to give an email, continue without it and skip step 9.\n3. Save the details with the save_lead tool.\n4. Ask their preferred day and time.\n5. Use the check_availability tool, then offer open slots if their choice is taken.\n6. Confirm the final day, time, and property back to the customer, then use the book_viewing tool to book.\n7. Only after book_viewing succeeds, use the update_property_status tool to change the property's status to \"Under Offer\".\n8. Use the send_agent_email tool to notify the assigned agent.\n9. Share the office address with the customer in the chat.\n10. Use the send_client_email tool to email the customer a summary of their booking. The email must include the office address and theirs.\n11. Also use the Create_view tool note to create the viewing.\n12. Send a final booking summary in the chat, in this format **make sure you include the viewing Id that is compalsary:\n\n\"✅ Your viewing is booked!\n📍 Property: [property name and location]\n📅 Date: [day and date]\n⏰ Time: [time]\n🏢 Meet us at: [OFFICE ADDRESS]\n👤 Your agent : [the assigned agent's name and phone number from the database]\n📅 Viewing ID: [The viewing Id] \n\nA confirmation has been sent to [customer email]. \nIs there anything else I can help you with?\"\n\nRules for booking confirmation:\n- Only send the summary after book_viewing has succeeded. Never confirm a booking that was not saved.\n- If a tool fails, tell the customer honestly, apologise briefly, and let them know an agent will follow up.\n- Leave out the \"confirmation has been sent\" line if no email was sent.\n\nNOTIFYING AGENTS\nUse send_agent_email when:\n- A viewing is booked\n- A customer wants to speak to a person\n- A customer is ready to buy/rent or asks about price negotiation\n- You can't answer a question\nSend to the agent assigned to that property (from the database). If none is assigned, send to [default agent email]. Include: customer name, phone, property, and a one-line summary. Then tell the customer an agent will follow up.\n\nIMAGES\nWhen sharing a property, send its image_url from the database. If none exist, say photos are available on request from an agent.\n\nFIRST MESSAGE\nGreet warmly, introduce yourself as the Kaduna Prime Estate assistant, and ask how you can help.\n\nIf a customer is upset or the request is outside your scope, apologise briefly and hand them to a human agent."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1488,
+        464
+      ],
+      "id": "9b610050-c6d7-4da4-9e39-014e79bbbef3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        688
+      ],
+      "id": "aa37b1ca-cabf-42f2-9afa-841a655ccd28",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Switch').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        688
+      ],
+      "id": "5e35e58c-52d2-48a9-afe0-5a4551a682da",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        -80
+      ],
+      "id": "da3f8922-85c7-4016-bc7e-703479d5a5de",
+      "name": "Generate audio"
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Switch').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "2380662e-9223-42ce-b351-f1484a060e40",
+      "name": "Send an audio file"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4306589c-2865-4371-bdeb-f0163a0fdfe3",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "={{ $json.message.text }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2149ee29-5f26-4326-941c-42fe1adbc15d",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        464
+      ],
+      "id": "43b29a34-b618-4482-99cd-388cef5a00de",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2336,
+        464
+      ],
+      "id": "e6130d49-f3c3-4095-bb90-79ba61280f03",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "description": "Answers customer questions using information from the approved knowledge base, including company details, property policies, viewing procedures, payment information, and FAQs. It must provide accurate responses and never invent information."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        688
+      ],
+      "id": "081530ea-c373-498c-85f4-33b6dc2d556e",
+      "name": "Kaduna Prime Qs"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        896
+      ],
+      "id": "04593d1d-28a0-41ed-a43b-a0e4f42513e4",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "kaduprimeestate",
+          "mode": "list",
+          "cachedResultName": "kaduprimeestate"
+        },
+        "options": {
+          "pineconeNamespace": "Prime Estate"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        896
+      ],
+      "id": "b6372180-ffac-4a70-bc72-c3ad3c95ca55",
+      "name": "Pinecone Vector Store"
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1056,
+        1104
+      ],
+      "id": "5ba1162c-01dc-4e29-8816-9f8530ee67ee",
+      "name": "Embeddings OpenAI"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Properties",
+          "mode": "name",
+          "cachedResultName": "Properties"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        688
+      ],
+      "id": "d7ed7f62-d2e1-4a67-b5b2-094ad2c50985",
+      "name": "Search_properties"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads/clients",
+          "mode": "name",
+          "cachedResultName": "Leads/clients"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ \"BNC\" + $now.toFormat(\"yyMMddHHmmss\") }}",
+            "full_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('full_name', ``, 'string') }}",
+            "phone_number": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('phone_number', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "source": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('source', ``, 'string') }}",
+            "preferred_location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('preferred_location', ``, 'string') }}",
+            "property_type": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_type', ``, 'string') }}",
+            "bedrooms": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('bedrooms', ``, 'string') }}",
+            "bathrooms": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('bathrooms', ``, 'string') }}",
+            "budget": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('budget', ``, 'string') }}",
+            "purpose": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('purpose', ``, 'string') }}",
+            "preferred_amenities": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('preferred_amenities', ``, 'string') }}",
+            "property_of_interest": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_of_interest', ``, 'string') }}",
+            "lead_status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('lead_status', ``, 'string') }}",
+            "lead_temperature": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('lead_temperature', ``, 'string') }}",
+            "viewing_status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('viewing_status', ``, 'string') }}",
+            "viewing_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('viewing_date', ``, 'string') }}",
+            "viewing_time": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('viewing_time', ``, 'string') }}",
+            "conversation_summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conversation_summary', ``, 'string') }}",
+            "last_message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('last_message', ``, 'string') }}",
+            "last_contacted": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('last_contacted', ``, 'string') }}",
+            "next_follow_up": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('next_follow_up', ``, 'string') }}",
+            "assigned_agent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('assigned_agent', ``, 'string') }}",
+            "updated_at": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('updated_at', ``, 'string') }}",
+            "created_at": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone_number",
+              "displayName": "phone_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preferred_location",
+              "displayName": "preferred_location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bedrooms",
+              "displayName": "bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "bathrooms",
+              "displayName": "bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "purpose",
+              "displayName": "purpose",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preferred_amenities",
+              "displayName": "preferred_amenities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_of_interest",
+              "displayName": "property_of_interest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_temperature",
+              "displayName": "lead_temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "viewing_status",
+              "displayName": "viewing_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "viewing_date",
+              "displayName": "viewing_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "viewing_time",
+              "displayName": "viewing_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_summary",
+              "displayName": "conversation_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_message",
+              "displayName": "last_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_contacted",
+              "displayName": "last_contacted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_follow_up",
+              "displayName": "next_follow_up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_agent",
+              "displayName": "assigned_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        688
+      ],
+      "id": "b35ca9c6-50fb-492a-9250-46279c08c842",
+      "name": "save_lead"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_CALENDAR_ID }}",
+          "mode": "id"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1632,
+        688
+      ],
+      "id": "b4a3b6db-21c2-44ea-a556-aca53b080520",
+      "name": "check_availability"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.AGENT_EMAIL }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        688
+      ],
+      "id": "2ca558ef-090f-4aef-95ee-41984185d5cb",
+      "name": "send_agent_email"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `write the subject of the mail here`, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": []
+          },
+          "senderName": "Kaduna Prime Estate"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        704
+      ],
+      "id": "256ce7ca-4189-4cc6-9e82-9c1bd7c6fa9a",
+      "name": "send_client_email"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_CALENDAR_ID }}",
+          "mode": "id"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $env.AGENT_EMAIL }}",
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees1_Attendees', ``, 'string') }}"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2176,
+        704
+      ],
+      "id": "1cb6c584-f4b9-4443-aba2-2df41b370501",
+      "name": "Create an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Properties",
+          "mode": "name",
+          "cachedResultName": "Properties"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id__using_to_match_', ``, 'string') }}",
+            "status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('status', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "property_id"
+          ],
+          "schema": [
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "property_name",
+              "displayName": "property_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "listing_type",
+              "displayName": "listing_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "area",
+              "displayName": "area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "bedrooms",
+              "displayName": "bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "bathrooms",
+              "displayName": "bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "parking_spaces",
+              "displayName": "parking_spaces",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "property_size_sqm",
+              "displayName": "property_size_sqm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "furnishing",
+              "displayName": "furnishing",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "estate",
+              "displayName": "estate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "amenities",
+              "displayName": "amenities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "suitable_for",
+              "displayName": "suitable_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payment_plan",
+              "displayName": "payment_plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "inspection_available",
+              "displayName": "inspection_available",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Images",
+              "displayName": "Images",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        2304,
+        688
+      ],
+      "id": "f1b8e3de-57f8-4818-a1e2-f055e683e594",
+      "name": "update_property_status"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Viewing",
+          "mode": "name",
+          "cachedResultName": "Viewing"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "viewing_id": "={{ \"KDPEV\" + $now.toFormat(\"yyMMddHHmmss\") }}",
+            "lead_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('lead_id', `The lead Id`, 'string') }}",
+            "property_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('property_id', `The Id of the property`, 'string') }}",
+            "customer_name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_name', `The name of the property`, 'string') }}",
+            "customer_phone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('customer_phone', `The phone  number  of the lead`, 'string') }}",
+            "viewing_date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('viewing_date', `The day scheduled for viewing`, 'string') }}",
+            "viewing_time": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('viewing_time', `The time scheduled for viewing`, 'string') }}",
+            "status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('status', `the statues of the schedule is  it, Scheduled, Rescheduled, Completed, No Show, or Cancelled.`, 'string') }}",
+            "calendar_event_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('calendar_event_id', ``, 'string') }}",
+            "notes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('notes', `a little note about the view containing the property, the people or person  the client is coming with.`, 'string') }}",
+            "created_at": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('created_at', ``, 'string') }}",
+            "updated_at": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('updated_at', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "viewing_id",
+              "displayName": "viewing_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_id",
+              "displayName": "property_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_phone",
+              "displayName": "customer_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "viewing_date",
+              "displayName": "viewing_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "viewing_time",
+              "displayName": "viewing_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "calendar_event_id",
+              "displayName": "calendar_event_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1904,
+        704
+      ],
+      "id": "d360c400-ccc0-453c-8c55-dbf34038cd98",
+      "name": "Create_view"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio": {
+      "main": [
+        [
+          {
+            "node": "Send an audio file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kaduna Prime Qs": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Kaduna Prime Qs",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Kaduna Prime Qs",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search_properties": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_availability": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_agent_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_client_email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_property_status": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create_view": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}

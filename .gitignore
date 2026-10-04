@@ -1,0 +1,137 @@
+# ==========================================================================
+# Secrets & credentials - NEVER COMMIT THESE
+# ==========================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*.jks
+secrets.json
+secrets.yaml
+secrets.yml
+credentials.json
+service-account*.json
+*-service-account*.json
+
+# ==========================================================================
+# n8n
+# ==========================================================================
+# Local n8n instance data (contains encrypted + plaintext credentials,
+# execution data, binary files and webhook registrations)
+.n8n/
+**/.n8n/
+n8n_data/
+~/.n8n/
+
+# Exported credentials and private key downloads
+*n8n-credentials*.json
+*credentials*.json
+!*.example.json
+
+# Local working exports that still contain live credential bindings,
+# real e-mail addresses, phone numbers or Google Sheet / Calendar / Drive IDs.
+# Matched by EXACT filename on purpose - a broad wildcard such as `*RAG*.json`
+# would also hide the sanitized, publishable template in workflows/.
+# To publish a new export, first strip it (see SECURITY.md) and rename it to
+# something ending in `-private.json`, which is ignored below.
+Kaduna Rime Estate.json
+RAG APP.json
+workflows/*-private*.json
+workflows/*-local*.json
+workflows/*-secrets*.json
+workflows/*-unsanitized*.json
+# Ignore any JSON sitting in the project root (root-level exports are private)
+/*.json
+
+# Execution results / pinned data (can contain live customer records)
+*pinData*
+executions/
+*.execution.json
+
+# Binary & media handled by the workflow (voice notes, generated audio)
+*.ogg
+*.oga
+*.mp3
+*.m4a
+*.wav
+*.webm
+*.opus
+*.telegramvoice
+
+# Vector store / embedding data exports
+*pinecone*.json
+*embeddings*.json
+*vectorstore*.json
+*.chroma
+
+# ==========================================================================
+# OS / editor / tooling noise
+# ==========================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+.vscode/
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Logs & temp
+*.log
+npm-debug.log*
+yarn-error.log*
+logs/
+tmp/
+temp/
+*.tmp
+
+# ==========================================================================
+# Dependencies / build output
+# ==========================================================================
+node_modules/
+jspm_packages/
+.pnp
+.pnp.js
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+
+# ==========================================================================
+# Databases & local backups
+# ==========================================================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.bak
+*.backup
+dump.sql
+*.sql.gz
+
+# ==========================================================================
+# n8n Cloud / hosting providers
+# ==========================================================================
+.render/
+.vercel/
+.netlify/
+.wrangler/
+fly.toml
+Procfile
+.heroku/
